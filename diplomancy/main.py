@@ -4,7 +4,7 @@ from flask import jsonify, request, Flask
 from flask_cors import CORS
 
 
-from diplomancy.utils.types import Database
+from utils.types import Database
 
 
 app = Flask("diplomancy-backend")
@@ -24,12 +24,18 @@ def logon():
     return response
 
 
-def execute():
+def initilize():
+    # Command to compose the container: podman compose --file database/compose.yaml up -d
+    # TODO: Move path, db name and password to env variable so that both python and db script can read it
     try:
         global db
-        db = psycopg.connect("dbname=diplomancy user=backend")
+        db = psycopg.connect("host=localhost dbname=diplomancy_db user='diplomancy' password='password1234'")
         app.run(debug=True)
     except psycopg.OperationalError:
         print("Unable to establish connection to database. App will now terminate")
     except:
         print("Unknown error has occured. App will now terminate.")
+
+
+if __name__ == '__main__':
+    initilize()

@@ -1,32 +1,22 @@
 services:
-  postgres:
-    image: docker.io/library/postgres:17.10
-    container_name: postgres
+  diplomancy_db:
+    container_name: diplomancy_db
+    image: docker.io/library/postgres:18.4
     restart: unless-stopped
 
     ports:
       - "5432:5432"
 
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: diplomancy_db
+      POSTGRES_USER: diplomancy
+      POSTGRES_PASSWORD: password1234
 
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    secrets:
-      - postgres_password
+      - ./data:/var/lib/postgresql/18/docker:Z
 
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+      test: [ "CMD-SHELL", "pg_isready", "-U", "diplomancy", "-d", "diplomancy_db" ]
       interval: 30s
       timeout: 10s
       retries: 5
-
-secrets:
-  postgres_password:
-    external: true
-
-volumes:
-  postgres_data: .
