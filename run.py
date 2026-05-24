@@ -1,4 +1,4 @@
-from src.main import execute
+from diplomancy.main import execute
 
 
 execute()
