@@ -16,7 +16,7 @@ services:
       - ./data:/var/lib/postgresql/18/docker:Z
 
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready", "-U", "diplomancy", "-d", "diplomancy_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U diplomancy -d diplomancy_db" ]
       interval: 30s
       timeout: 10s
       retries: 5
