@@ -1,46 +1,39 @@
 #!/bin/bash
 
-if ! test -d .venv; then
-    echo -e "[VENV]" Virtual enviroment not detected. Setting up new one '\n';
+PREFIX_SETUP="[SETUP]"
+EXIT_CODE=0
+MESSAGES=()
 
-    if ! python3 -m venv .venv; then
-        echo "[VENV]" Failed to create .venv. Check your python installation.;
-        exit 0;
-    fi
-
-    if ! . .venv/bin/activate; then
-        echo "[VENV]" Failed to activate local venv enviroment.;
-        exit 0;
-    fi
-
-    if [[ "$VIRTUAL_ENV" == "" ]]; then
-        echo "[VENV]" There is an issue with venv enviroment.;
-        exit 0;
-    fi
-
-    if ! pip3 install -r requirements.txt; then
-        echo "[VENV]" Failed to install requirements.txt.;
-        exit 0;
-    fi
-
-    echo -e '\n';
-else
-    if ! . .venv/bin/activate; then
-        echo "[VENV]" Failed to activate local venv enviroment.;
-        exit 0;
-    fi
-
-    if [[ "$VIRTUAL_ENV" == "" ]]; then
-        echo "[VENV]" There is an issue with venv enviroment.;
-        exit 0;
-    fi
-
-    echo -e "[VENV]" Ok;
+if ! command -v podman info > /dev/null; then
+    MESSAGES+=("Podman is not installed. Cannot setup database.")
+    EXIT_CODE=1
 fi
 
-echo -e "[DIPLOMANCY]" Starting backend services '\n';
-
-if ! python3 diplomancy/main.py; then
-    echo "[DIPLOMANCY]" Failed to start backend script.;
-    exit 0;
+if ! python3 --version > /dev/null; then
+    MESSAGES+=("Python is required to run backend script.")
+    EXIT_CODE=1
 fi
+
+if [ $EXIT_CODE = 0 ] && ! . scripts/setup_venv.sh; then
+    EXIT_CODE=1
+fi
+
+if [ $EXIT_CODE = 0 ] && ! . scripts/setup_podman.sh; then
+    EXIT_CODE=1
+fi
+
+if [ $EXIT_CODE = 0 ]; then
+    MESSAGES+=("Ok")
+    MESSAGES+=("Starting backend services...")
+fi
+
+for message in "${MESSAGES[@]}"; do
+    echo -e "$PREFIX_SETUP $message"
+done
+
+if [ $EXIT_CODE = 0 ] && ! python3 diplomancy/main.py; then
+    echo -e "$PREFIX_SETUP Failed to start primary script."
+    EXIT_CODE=1
+fi
+
+exit $EXIT_CODE
