@@ -1,4 +1,5 @@
 import psycopg
+import sys
 
 from flask import jsonify, request, Flask
 from flask_cors import CORS
@@ -27,16 +28,22 @@ def logon():
 
 def initilize():
     log("Startup", Severity.INF)
-    # Command to compose the container: podman compose --file database/compose.yaml up -d
-    # TODO: Move path, db name and password to env variable so that both python and db script can read it
+
     try:
+        assert len(sys.argv) == 4
+        connection_str = "host=localhost port='{0}' dbname='{1}' user='diplomancy' password='{2}'" \
+            .format(sys.argv[1], sys.argv[2], sys.argv[3])
+
         global db
-        db = psycopg.connect("host=localhost dbname=diplomancy_db user='diplomancy' password='password1234'")
+        db = psycopg.connect(connection_str)
         app.run(debug=True)
+
     except psycopg.OperationalError:
-        print("Unable to establish connection to database. App will now terminate")
+        log("Unable to establish connection to database. App will now terminate", Severity.ERR)
+    except AssertionError:
+        log("Expected tp receive 4 arguments, but got {0}".format(len(sys.argv)), Severity.ERR)
     except:
-        print("Unknown error has occured. App will now terminate.")
+        log("Unknown error has occured. App will now terminate.", Severity.ERR)
 
     log("Shutting down..", Severity.INF)
 

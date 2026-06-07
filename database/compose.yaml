@@ -1,16 +1,16 @@
 services:
   diplomancy_db:
-    container_name: diplomancy_db
+    container_name: ${CONATINER_NAME}
     image: docker.io/library/postgres:18.4
     restart: unless-stopped
 
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
 
     environment:
-      POSTGRES_DB: diplomancy_db
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: diplomancy
-      POSTGRES_PASSWORD: password1234
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
 
     volumes:
       - ./data:/var/lib/postgresql/18/docker:Z

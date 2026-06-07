@@ -8,5 +8,5 @@ class Severity(Enum):
     ERR = "ERR"
 
 
-def log(message: str, severity: Severity = Severity.DBG):
-    print("[DIPLOMNACY] " + severity.value + " " + message)
+def log(message: any, severity: Severity = Severity.DBG):
+    print("[DIPLOMNACY] " + severity.value + " " + str(message))
