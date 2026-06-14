@@ -20,7 +20,7 @@ def logon():
     json = request.get_json()
     result = handle_logon(json.get('email', ''), json.get('username', ''), json.get('password'))
 
-    response = jsonify({'some': 'data'})
+    response = jsonify()
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
