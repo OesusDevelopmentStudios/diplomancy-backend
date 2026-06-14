@@ -4,10 +4,10 @@ import sys
 from flask import jsonify, request, Flask
 from flask_cors import CORS
 
-
 from utils.types import Database
 from utils.log import log, Severity
 
+from auth.auth import handle_logon
 
 app = Flask("diplomancy-backend")
 CORS(app)
@@ -17,11 +17,11 @@ db: Database
 
 @app.route("/api/v1/auth/logon", methods=["POST"])
 def logon():
-    log("Received logon request")
-    log(request.get_json())
+    json = request.get_json()
+    result = handle_logon(json.get('email', ''), json.get('username', ''), json.get('password'))
 
     response = jsonify({'some': 'data'})
-    # response.status_code = 404
+    response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 

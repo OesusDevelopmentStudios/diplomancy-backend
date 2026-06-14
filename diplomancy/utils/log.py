@@ -1,3 +1,5 @@
+import inspect
+
 from enum import Enum
 
 
@@ -9,4 +11,4 @@ class Severity(Enum):
 
 
 def log(message: any, severity: Severity = Severity.DBG):
-    print("[DIPLOMNACY] " + severity.value + " " + str(message))
+    print("[DIPLOMNACY] " + severity.value + " " + inspect.stack()[1].function + ": " + str(message))
