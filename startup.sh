@@ -49,7 +49,7 @@ if [ $EXIT_CODE = 0 ] && ! . scripts/setup_podman.sh; then
 fi
 
 if [ $EXIT_CODE = 0 ]; then
-    MESSAGES+=("Database $DB_NAME will be accessible is running at http://127.0.0.1:$DB_PORT")
+    MESSAGES+=("Database $DB_NAME will is running at http://127.0.0.1:$DB_PORT")
     MESSAGES+=("Starting backend services...")
 fi
 

@@ -6,6 +6,7 @@ from flask_cors import CORS
 
 from utils.types import Database
 from utils.log import log, Severity
+from utils.database import init_database
 
 from auth.auth import handle_logon
 
@@ -18,11 +19,11 @@ db: Database
 @app.route("/api/v1/auth/logon", methods=["POST"])
 def logon():
     json = request.get_json()
-    result = handle_logon(json.get('email', ''), json.get('username', ''), json.get('password'))
-
+    result = handle_logon(db, json.get('email', ''), json.get('username', ''), json.get('password'))
     response = jsonify()
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
+
     return response
 
 
@@ -36,7 +37,11 @@ def initilize():
 
         global db
         db = psycopg.connect(connection_str)
-        app.run(debug=True)
+
+        if not init_database(db):
+            log("Failed to initilize database", Severity.ERR)
+        else:
+            app.run(debug=True)
 
     except psycopg.OperationalError:
         log("Unable to establish connection to database. App will now terminate", Severity.ERR)
