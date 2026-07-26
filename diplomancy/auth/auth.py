@@ -5,6 +5,7 @@ import hmac
 
 from types import NoneType
 
+from utils.database import execute_query
 from utils.http import Response
 from utils.types import Database
 
@@ -27,9 +28,8 @@ def handle_logon(db: Database, email: str|NoneType, username: str|NoneType, pass
     if is_email_taken(db, email):
         return AuthResponse(Response.CONFLICT)
     # TODO:
-    # 1. Implement proper email generation
-    # 2. Implement proper nickname generation -> Nickname#0000
-    # 3. Start finally svaing data in the db
+    # 1. Implement proper nickname generation -> Nickname#0000
+    # 2. Start finally svaing data in the db
     salt, secret = hash_password(password)
     # TODO Finally store data in the db
 
@@ -51,4 +51,10 @@ def verify_password(salt: bytes, secret: str, password: str) -> bool:
 
 
 def is_email_taken(db: Database, email: str) -> bool:
+    query = "SELECT * FROM users WHERE email = '%s';" % (email)
+    result = execute_query(db, query)
+
+    if not result:
+        return False
+
     return True
