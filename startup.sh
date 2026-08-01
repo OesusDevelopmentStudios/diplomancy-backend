@@ -19,8 +19,8 @@ if [ $EXIT_CODE = 0 ] && ! . scripts/setup_venv.sh; then
 fi
 
 if source diplomancy.conf; then
-    if [ -z "$CONATINER_NAME" ]; then
-        MESSAGES+=("CONATINER_NAME variable is not set in the config file.")
+    if [ -z "$CONTAINER_NAME" ]; then
+        MESSAGES+=("CONTAINER_NAME variable is not set in the config file.")
         EXIT_CODE=1
     fi
 
