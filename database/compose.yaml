@@ -1,6 +1,6 @@
 services:
   diplomancy_db:
-    container_name: ${CONATINER_NAME}
+    container_name: ${CONTAINER_NAME}
     image: docker.io/library/postgres:18.4
     restart: unless-stopped
 

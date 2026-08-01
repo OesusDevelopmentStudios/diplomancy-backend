@@ -43,10 +43,11 @@ def initilize():
         else:
             app.run(debug=True)
 
-    except psycopg.OperationalError:
+    except psycopg.OperationalError as error:
         log("Unable to establish connection to database. App will now terminate", Severity.ERR)
+        log("Error: {0}".format(error), Severity.ERR)
     except AssertionError:
-        log("Expected tp receive 4 arguments, but got {0}".format(len(sys.argv)), Severity.ERR)
+        log("Expected to receive 4 arguments, but got {0}".format(len(sys.argv)), Severity.ERR)
     except:
         log("Unknown error has occured. App will now terminate.", Severity.ERR)
 
