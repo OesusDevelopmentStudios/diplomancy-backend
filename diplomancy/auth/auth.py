@@ -27,6 +27,9 @@ def handle_logon(db: Database, email: str|NoneType, username: str|NoneType, pass
 
     if is_email_taken(db, email):
         return AuthResponse(Response.CONFLICT)
+
+    username_id = get_next_username_id(db, username)
+
     # TODO:
     # 1. Implement proper nickname generation -> Nickname#0000
     # 2. Start finally svaing data in the db
@@ -58,3 +61,16 @@ def is_email_taken(db: Database, email: str) -> bool:
         return False
 
     return True
+
+def get_next_username_id(db: Database, username: str) -> str:
+    query = "SELECT username_id FROM users WHERE username = '%s';" % (username)
+    result = execute_query(db, query)
+
+    if not result:
+        return "0000"
+
+    print(result)
+    return "0000"  # TODO: Implement proper username_id generation
+
+    # max_id = max([row[0] for row in result])
+    # return f"{max_id + 1:04d}"

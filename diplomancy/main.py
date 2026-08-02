@@ -19,6 +19,10 @@ db: Database
 @app.route("/api/v1/auth/logon", methods=["POST"])
 def logon():
     json = request.get_json()
+
+    # TODO: LOG only for development purposes, remove in production
+    log("Received logon request: {0}".format(json), Severity.DBG)
+
     result = handle_logon(db, json.get('email', ''), json.get('username', ''), json.get('password'))
     response = jsonify()
     response.status_code = result.code()
