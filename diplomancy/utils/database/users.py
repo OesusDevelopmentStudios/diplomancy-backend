@@ -49,22 +49,22 @@ class UserTable:
     def is_initilized(self):
         return self.initilized
 
-    def get_by_email(self, email: str, filter: list[UserFields]|NoneType = None):
-        what = "*" if filter is None else ", ".join(field for field in filter)
+    def get_by_email(self, email: str, filter: list[UserFields] = []):
+        what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE email = %s;"""
 
         result = execute_query(self.db, query, (email))
-        if filter and len(filter) == 1:
+        if len(filter) == 1:
             return [value[0] for value in result]
 
         return result
 
-    def get_by_username(self, username: str, filter: list[UserFields]|NoneType = None):
-        what = "*" if filter is None else ", ".join(field for field in filter)
+    def get_by_username(self, username: str, filter: list[UserFields] = []):
+        what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s;"""
 
-        result = execute_query(self.db, query, username)
-        if filter and len(filter) == 1:
+        result = execute_query(self.db, query, (username))
+        if len(filter) == 1:
             return [value[0] for value in result]
 
         return result
