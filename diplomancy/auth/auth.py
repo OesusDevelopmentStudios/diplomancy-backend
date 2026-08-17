@@ -40,7 +40,9 @@ class AuthResponse:
         return dict
 
 
-def handle_logon(user_db: UserTable, email: str|NoneType, username: str|NoneType, password: str|NoneType) -> AuthResponse:
+def handle_logon(
+        user_db: UserTable, email: str|NoneType, username: str|NoneType, password: str|NoneType) -> AuthResponse:
+
     if email is None or username is None or password is None:
         reason = []
         if email is None: reason.append(Reason.BAD_EMAIL)
@@ -48,8 +50,11 @@ def handle_logon(user_db: UserTable, email: str|NoneType, username: str|NoneType
         if password is None: reason.append(Reason.BAD_PASSWORD)
         return AuthResponse(Response.BAD_REQUEST, detail=reason)
 
+    if "#" in username:
+        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.BAD_USERNAME])
+
     if not validate_password(password):
-        return AuthResponse(Response.BAD_REQUEST, [Reason.BAD_PASSWORD])
+        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.BAD_PASSWORD])
 
     if user_db.get_by_email(email):
         return AuthResponse(Response.CONFLICT)
