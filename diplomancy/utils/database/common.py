@@ -10,7 +10,9 @@ def create_table(db: Database, name: str, params: str):
 def execute_query(db: Database, query, *params):
     try:
         result = db.execute(query, (params))
-        return result.fetchall()
+        values = result.fetchall()
+        db.commit()
+        return values
     except Exception as error:
         log("Invalid query: " + query, Severity.WRN)
         log(str(error), Severity.WRN)
