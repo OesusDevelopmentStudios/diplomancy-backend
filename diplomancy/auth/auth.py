@@ -43,11 +43,11 @@ class AuthResponse:
 def handle_logon(
         user_db: UserTable, email: str|NoneType, username: str|NoneType, password: str|NoneType) -> AuthResponse:
 
-    if email is None or username is None or password is None:
+    if not email or not username or not password:
         reason = []
-        if email is None: reason.append(Reason.BAD_EMAIL)
-        if username is None: reason.append(Reason.BAD_USERNAME)
-        if password is None: reason.append(Reason.BAD_PASSWORD)
+        if not email: reason.append(Reason.BAD_EMAIL)
+        if not username: reason.append(Reason.BAD_USERNAME)
+        if not password: reason.append(Reason.BAD_PASSWORD)
         return AuthResponse(Response.BAD_REQUEST, detail=reason)
 
     if "#" in username:

@@ -18,6 +18,8 @@ SPECS = """
     token BYTEA,
     valid_since date,
     UNIQUE (username, username_id),
+    CHECK (username <> ''),
+    CHECK (email <> ''),
     PRIMARY KEY (email)
 """
 
