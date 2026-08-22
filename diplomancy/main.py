@@ -7,7 +7,7 @@ from flask_cors import CORS
 from utils.log import log, Severity
 from utils.database.users import UserTable
 
-from auth.auth import handle_logon
+from auth.auth import handle_logon, handle_login
 
 
 app = Flask("diplomancy-backend")
@@ -22,7 +22,22 @@ def logon():
     # TODO: LOG only for development purposes, remove in production
     log("Received logon request: {0}".format(json), Severity.DBG)
 
-    result = handle_logon(user_db, json.get('email', ''), json.get('username', ''), json.get('password'))
+    result = handle_logon(user_db, json.get('email', ''), json.get('username', ''), json.get('password', ''))
+    response = jsonify(result.dict())
+    response.status_code = result.code()
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
+
+
+@app.route("/api/v1/auth/login", methods=["POST"])
+def login():
+    json = request.get_json()
+
+    # TODO: LOG only for development purposes, remove in production
+    log("Received login request: {0}".format(json), Severity.DBG)
+
+    result = handle_login(user_db, json.get('id', ''), json.get('password', ''), json.get('remember', None))
     response = jsonify(result.dict())
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')

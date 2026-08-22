@@ -15,19 +15,20 @@ class Reason:
     BAD_PASSWORD = 0
     BAD_USERNAME = 1
     BAD_EMAIL = 2
+    BAD_USER_ID = 3
+    MISSING_REMEMBER_VALUE = 4
 
 
 class AuthResponse:
-    def __init__(self, response: Response, username: str|NoneType = None, detail: list[Reason]|NoneType = None):
+    def __init__(self, response: Response, username: str|NoneType = None, detail: list[Reason]|NoneType = None,
+                 token: str|NoneType = None):
         self.response = response
         self.username = username
         self.detail = detail
+        self.token = token
 
     def code(self):
         return self.response.value
-
-    def username(self):
-        return self.username
 
     def dict(self):
         dict = {}
@@ -37,12 +38,14 @@ class AuthResponse:
         if self.detail:
             dict["detail"] = self.detail
 
+        if self.token:
+            dict["token"] = self.token
+
         return dict
 
 
 def handle_logon(
         user_db: UserTable, email: str|NoneType, username: str|NoneType, password: str|NoneType) -> AuthResponse:
-
     if not email or not username or not password:
         reason = []
         if not email: reason.append(Reason.BAD_EMAIL)
@@ -65,4 +68,16 @@ def handle_logon(
     if not success:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.CREATED, get_uuid(username, uid))
+    return AuthResponse(Response.CREATED, username=get_uuid(username, uid))
+
+
+def handle_login(
+        user_db: UserTable, user_id: str|NoneType, password: str|NoneType, remember: bool|NoneType) -> AuthResponse:
+    if not user_id or not password or remember is NoneType:
+        reason = []
+        if not user_id: reason.append(Reason.BAD_USER_ID)
+        if not password: reason.append(Reason.BAD_PASSWORD)
+        if remember is NoneType: reason.append(Reason.MISSING_REMEMBER_VALUE)
+        return AuthResponse(Response.BAD_REQUEST, detail=reason)
+
+    return AuthResponse(Response.OK, token="TODO: Generate proper token in response")
