@@ -6,6 +6,14 @@ import hmac
 from utils.database.users import UserTable, UserFields
 
 
+def _get_data_by_username(user_db: UserTable, uuid: str):
+    username, uid = uuid.split("#")
+    if len(uid) != 4 or not uid.isdigit():
+        return None
+    
+    return user_db.get_by_username_id(username, int(uid), ["salt", "secret"])
+
+
 def validate_password(password: str) -> bool:
     return re.match(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$', password)
 
@@ -39,3 +47,10 @@ def get_next_uid(user_db: UserTable, username: str) -> int:
 def get_uuid(username: str, uid: int) -> str:
     zeros = 4 - len(str(uid))
     return username + "#" + zeros * "0" + str(uid)
+
+
+def get_user_data(user_db: UserTable, user_id: str):
+    if "#" in user_id:
+        return _get_data_by_username(user_db, user_id)
+    else:
+        return user_db.get_by_email(user_id, ["salt", "secret"])

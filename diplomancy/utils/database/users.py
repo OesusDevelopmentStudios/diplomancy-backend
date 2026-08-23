@@ -71,6 +71,16 @@ class UserTable:
 
         return result
 
+    def get_by_username_id(self, username: str, uid: int, filter: list[UserFields] = []):
+        what = "*" if not filter else ", ".join(field for field in filter)
+        query = f"""SELECT {what} FROM {NAME} WHERE username = %s AND username_id = %s;"""
+
+        result = execute_query(self.db, query, (username, uid))
+        if len(filter) == 1:
+            return [value[0] for value in result]
+
+        return result
+
     def insert(self, username: str, uid: int, email: str, secret: bytes, salt: bytes) -> bool:
         query = f"""
             INSERT INTO {NAME}

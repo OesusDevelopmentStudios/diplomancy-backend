@@ -5,6 +5,7 @@ from utils.database.users import UserTable
 
 from auth.helpers import (
     get_next_uid,
+    get_user_data,
     get_uuid,
     hash_password,
     validate_password
@@ -80,4 +81,11 @@ def handle_login(
         if remember is NoneType: reason.append(Reason.MISSING_REMEMBER_VALUE)
         return AuthResponse(Response.BAD_REQUEST, detail=reason)
 
+    user_data = get_user_data(user_db, user_id)
+    if not user_data:
+            return AuthResponse(Response.NOT_FOUND)
+    
+    if len(user_data) != 1:
+        return AuthResponse(Response.INTERNAL_SERVER_ERROR)
+    
     return AuthResponse(Response.OK, token="TODO: Generate proper token in response")
