@@ -55,7 +55,7 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE email = %s;"""
 
-        result = execute_query(self.db, query, (email))
+        result = execute_query(self.db, query, [email])
         if len(filter) == 1:
             return [value[0] for value in result]
 
@@ -65,7 +65,7 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s;"""
 
-        result = execute_query(self.db, query, (username))
+        result = execute_query(self.db, query, [username])
         if len(filter) == 1:
             return [value[0] for value in result]
 
@@ -75,7 +75,7 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s AND username_id = %s;"""
 
-        result = execute_query(self.db, query, (username, uid))
+        result = execute_query(self.db, query, [username, uid])
         if len(filter) == 1:
             return [value[0] for value in result]
 
@@ -90,7 +90,7 @@ class UserTable:
         """
 
         try:
-            self.db.execute(query, (username, uid, email, secret, salt))
+            self.db.execute(query, [username, uid, email, secret, salt])
             self.db.commit()
         except Exception as error:
             log("Insertion failed: " + query, Severity.ERR)

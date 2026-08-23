@@ -7,9 +7,9 @@ def create_table(db: Database, name: str, params: str):
     db.execute(creation_str)
 
 
-def execute_query(db: Database, query, params: tuple):
+def execute_query(db: Database, query, params: list):
     try:
-        result = db.execute(query, (*params,))
+        result = db.execute(query, params)
         values = result.fetchall()
         db.commit()
         return values

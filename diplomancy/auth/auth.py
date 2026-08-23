@@ -8,7 +8,8 @@ from auth.helpers import (
     get_user_data,
     get_uuid,
     hash_password,
-    validate_password
+    validate_password,
+    verify_password
 )
 
 
@@ -87,5 +88,10 @@ def handle_login(
     
     if len(user_data) != 1:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
+
+    print("User data: {0}".format(user_data))
+
+    if not verify_password(user_data[0][0], user_data[0][1], password):
+        return AuthResponse(Response.UNAUTHORIZED)
     
     return AuthResponse(Response.OK, token="TODO: Generate proper token in response")
