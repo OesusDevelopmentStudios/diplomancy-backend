@@ -3,7 +3,8 @@ from utils.log import log, Severity
 
 from utils.database.common import (
     create_table,
-    execute_query
+    execute_query,
+    execute_query_and_get,
 )
 
 NAME = "users"
@@ -13,8 +14,9 @@ SPECS = """
     email varchar(254) NOT NULL,
     secret BYTEA NOT NULL,
     salt BYTEA NOT NULL,
-    token BYTEA,
+    token varchar(128),
     valid_since date,
+    save_login BOOLEAN DEFAULT FALSE,
     UNIQUE (username, username_id),
     UNIQUE (token),
     CHECK (username <> ''),
@@ -24,14 +26,14 @@ SPECS = """
 
 
 class UserFields:
+    EMAIL = "email"
+    SALT = "salt"
+    SAVE_LOGIN = "save_login"
+    SECRET = "secret"
+    TOKEN = "token"
     USERNAME = "username"
     USERNAME_ID = "username_id"
-    EMAIL = "email"
-    SECRET = "secret"
-    SALT = "salt"
-    TOKEN = "token"
     VALID_SINCE = "valid_since"
-
 
 class UserTable:
     def __init__(self, db: Database):
@@ -54,7 +56,7 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE email = %s;"""
 
-        result = execute_query(self.db, query, [email])
+        result = execute_query_and_get(self.db, query, [email])
         if len(filter) == 1:
             return [value[0] for value in result]
 
@@ -64,7 +66,7 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s;"""
 
-        result = execute_query(self.db, query, [username])
+        result = execute_query_and_get(self.db, query, [username])
         if len(filter) == 1:
             return [value[0] for value in result]
 
@@ -74,7 +76,7 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s AND username_id = %s;"""
 
-        result = execute_query(self.db, query, [username, uid])
+        result = execute_query_and_get(self.db, query, [username, uid])
         if len(filter) == 1:
             return [value[0] for value in result]
 
@@ -88,13 +90,22 @@ class UserTable:
                 (%s, %s, %s, %s, %s);
         """
 
-        try:
-            self.db.execute(query, [username, uid, email, secret, salt])
-            self.db.commit()
-        except Exception as error:
-            log("Insertion failed: " + query, Severity.ERR)
-            log(error, Severity.ERR)
-            self.db.rollback()
+        if not execute_query(self.db,  query, [username, uid, email, secret, salt]):
+            log("Insertion failed", Severity.ERR)
             return False
 
+        return True
+
+    def set_token_and_expiry(self, email:str, token: str, date: str, save_login: bool) -> bool:
+        query = f"""
+            UPDATE {NAME}
+            SET token = %s, valid_since = %s, save_login = %s
+            WHERE email = %s;
+        """
+
+        # TODO: Handle date
+        if not execute_query(self.db,  query, [token, date, save_login, email]):
+            log("Update failed", Severity.ERR)
+            return False
+        
         return True

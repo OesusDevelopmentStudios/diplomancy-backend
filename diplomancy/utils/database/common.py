@@ -7,7 +7,20 @@ def create_table(db: Database, name: str, params: str):
     db.execute(creation_str)
 
 
-def execute_query(db: Database, query, params: list):
+def execute_query(db: Database, query, params: list) -> bool:
+    try:
+        db.execute(query, params)
+        db.commit()
+        return True
+    except Exception as error:
+        log("Invalid query: " + query, Severity.WRN)
+        log(str(error), Severity.WRN)
+        db.rollback()
+
+    return False
+
+
+def execute_query_and_get(db: Database, query, params: list):
     try:
         result = db.execute(query, params)
         values = result.fetchall()
@@ -19,3 +32,5 @@ def execute_query(db: Database, query, params: list):
         db.rollback()
 
     return []
+
+
