@@ -1,3 +1,5 @@
+import datetime
+
 from types import NoneType
 from uuid import uuid4
 
@@ -85,18 +87,17 @@ def handle_login(
 
     user_data = get_user_data(user_db, user_id)
     if not user_data:
-            return AuthResponse(Response.NOT_FOUND)
-    
+        return AuthResponse(Response.NOT_FOUND)
+
     if len(user_data) != 1:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    salt, secret = user_data[0]
+    email, salt, secret = user_data[0]
     if not verify_password(salt, secret, password):
         return AuthResponse(Response.UNAUTHORIZED)
 
     token = uuid4()
-    print(f"Generated token: {token}")
+    if not user_db.set_token_and_expiry(email, str(token), str(datetime.datetime.now()), remember):
+        return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    # TODO: Store the token in the database for the user and handle the "remember" functionality
-    
     return AuthResponse(Response.OK, token=token)

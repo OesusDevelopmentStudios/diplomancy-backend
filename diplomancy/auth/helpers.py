@@ -10,8 +10,8 @@ def _get_data_by_username(user_db: UserTable, uuid: str):
     username, uid = uuid.split("#")
     if len(uid) != 4 or not uid.isdigit():
         return None
-    
-    return user_db.get_by_username_id(username, int(uid), ["salt", "secret"])
+
+    return user_db.get_by_username_id(username, int(uid), [UserFields.EMAIL, UserFields.SALT, UserFields.SECRET])
 
 
 def validate_password(password: str) -> bool:
@@ -53,4 +53,4 @@ def get_user_data(user_db: UserTable, user_id: str):
     if "#" in user_id:
         return _get_data_by_username(user_db, user_id)
     else:
-        return user_db.get_by_email(user_id, ["salt", "secret"])
+        return user_db.get_by_email(user_id, [UserFields.EMAIL, UserFields.SALT, UserFields.SECRET])

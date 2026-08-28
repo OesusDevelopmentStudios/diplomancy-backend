@@ -14,8 +14,8 @@ SPECS = """
     email varchar(254) NOT NULL,
     secret BYTEA NOT NULL,
     salt BYTEA NOT NULL,
-    token varchar(128),
-    valid_since date,
+    token varchar(36),
+    valid_since timestamp,
     save_login BOOLEAN DEFAULT FALSE,
     UNIQUE (username, username_id),
     UNIQUE (token),
@@ -103,9 +103,8 @@ class UserTable:
             WHERE email = %s;
         """
 
-        # TODO: Handle date
         if not execute_query(self.db,  query, [token, date, save_login, email]):
             log("Update failed", Severity.ERR)
             return False
-        
+
         return True
