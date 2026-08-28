@@ -1,5 +1,3 @@
-from types import NoneType
-
 from utils.types import Database
 from utils.log import log, Severity
 
@@ -18,6 +16,7 @@ SPECS = """
     token BYTEA,
     valid_since date,
     UNIQUE (username, username_id),
+    UNIQUE (token),
     CHECK (username <> ''),
     CHECK (email <> ''),
     PRIMARY KEY (email)

@@ -1,4 +1,5 @@
 from types import NoneType
+from uuid import uuid4
 
 from utils.http import Response
 from utils.database.users import UserTable
@@ -89,9 +90,13 @@ def handle_login(
     if len(user_data) != 1:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    print("User data: {0}".format(user_data))
-
-    if not verify_password(user_data[0][0], user_data[0][1], password):
+    salt, secret = user_data[0]
+    if not verify_password(salt, secret, password):
         return AuthResponse(Response.UNAUTHORIZED)
+
+    token = uuid4()
+    print(f"Generated token: {token}")
+
+    # TODO: Store the token in the database for the user and handle the "remember" functionality
     
-    return AuthResponse(Response.OK, token="TODO: Generate proper token in response")
+    return AuthResponse(Response.OK, token=token)
