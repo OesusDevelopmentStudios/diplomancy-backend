@@ -15,8 +15,12 @@ CORS(app)
 
 user_db: UserTable
 
-@app.route("/api/v1/auth/logon", methods=["POST"])
-def logon():
+
+API_V1 = "/api/v1/"
+
+
+@app.route(API_V1 + "auth/logon", methods=["POST"])
+def auth_logon():
     json = request.get_json()
 
     # TODO: LOG only for development purposes, remove in production
@@ -30,8 +34,8 @@ def logon():
     return response
 
 
-@app.route("/api/v1/auth/login", methods=["POST"])
-def login():
+@app.route(API_V1 + "auth/login", methods=["POST"])
+def auth_login():
     json = request.get_json()
 
     # TODO: LOG only for development purposes, remove in production
@@ -43,6 +47,14 @@ def login():
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
+
+
+@app.route(API_V1 + "auth/validate", methods=["POST"])
+def auth_validate():
+    json = request.get_json()
+
+    # TODO: LOG only for development purposes, remove in production
+    log("Received login request: {0}".format(json), Severity.DBG)
 
 
 def initilize():

@@ -1,13 +1,13 @@
 import datetime
 
 from types import NoneType
-from uuid import uuid4
 
 from utils.http import Response
-from utils.database.users import UserTable
+from utils.database.users import UserTable, UserFields
 
 from auth.helpers import (
     get_next_uid,
+    get_unique_token,
     get_user_data,
     get_uuid,
     hash_password,
@@ -89,15 +89,17 @@ def handle_login(
     if not user_data:
         return AuthResponse(Response.NOT_FOUND)
 
-    if len(user_data) != 1:
+    if not isinstance(user_data, dict):
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    email, salt, secret = user_data[0]
+    email = user_data[UserFields.EMAIL]
+    salt = user_data[UserFields.SALT]
+    secret = user_data[UserFields.SECRET]
     if not verify_password(salt, secret, password):
         return AuthResponse(Response.UNAUTHORIZED)
 
-    token = uuid4()
-    if not user_db.set_token_and_expiry(email, str(token), str(datetime.datetime.now()), remember):
+    token = get_unique_token(user_db)
+    if not user_db.set_token_and_expiry(email, token, str(datetime.datetime.now()), remember):
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
     return AuthResponse(Response.OK, token=token)

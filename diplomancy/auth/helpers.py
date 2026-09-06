@@ -3,6 +3,8 @@ import re
 import hashlib
 import hmac
 
+from uuid import uuid4
+
 from utils.database.users import UserTable, UserFields
 
 
@@ -12,6 +14,17 @@ def _get_data_by_username(user_db: UserTable, uuid: str):
         return None
 
     return user_db.get_by_username_id(username, int(uid), [UserFields.EMAIL, UserFields.SALT, UserFields.SECRET])
+
+
+def _get_sorted_ids(user_db: UserTable, username: str):
+    result = user_db.get_by_username(username, [UserFields.USERNAME_ID])
+    if not result:
+        return []
+
+    if isinstance(result, dict):
+        return [result[UserFields.USERNAME_ID]]
+
+    return sorted([id[UserFields.USERNAME_ID] for id in result])
 
 
 def validate_password(password: str) -> bool:
@@ -29,13 +42,9 @@ def verify_password(salt: bytes, secret: str, password: str) -> bool:
 
 
 def get_next_uid(user_db: UserTable, username: str) -> int:
-    result = user_db.get_by_username(username, [UserFields.USERNAME_ID])
-    if not result:
-        return 0
-
     new_id = 0
-    result.sort()
-    for taken_id in result:
+    ids = _get_sorted_ids(user_db, username)
+    for taken_id in ids:
         if taken_id > new_id:
             return new_id
         if new_id == taken_id:
@@ -54,3 +63,10 @@ def get_user_data(user_db: UserTable, user_id: str):
         return _get_data_by_username(user_db, user_id)
     else:
         return user_db.get_by_email(user_id, [UserFields.EMAIL, UserFields.SALT, UserFields.SECRET])
+
+
+def get_unique_token(user_db) -> str:
+    while True:
+        token = uuid4()
+        if not user_db.get_by_token(str(token)):
+            return str(token)

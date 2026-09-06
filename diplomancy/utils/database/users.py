@@ -35,6 +35,11 @@ class UserFields:
     USERNAME_ID = "username_id"
     VALID_SINCE = "valid_since"
 
+
+ALL = [UserFields.USERNAME, UserFields.USERNAME_ID, UserFields.EMAIL, UserFields.SECRET, UserFields.SALT,
+       UserFields.VALID_SINCE, UserFields.SAVE_LOGIN]
+
+
 class UserTable:
     def __init__(self, db: Database):
         self.db = db
@@ -53,32 +58,47 @@ class UserTable:
         return self.initilized
 
     def get_by_email(self, email: str, filter: list[UserFields] = []):
+        labels = ALL if not filter else filter
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE email = %s;"""
 
-        result = execute_query_and_get(self.db, query, [email])
-        if len(filter) == 1:
-            return [value[0] for value in result]
+        result = execute_query_and_get(self.db, query, labels, [email])
+        if len(result) == 1:
+            return result[0]
 
         return result
 
     def get_by_username(self, username: str, filter: list[UserFields] = []):
+        labels = ALL if not filter else filter
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s;"""
 
-        result = execute_query_and_get(self.db, query, [username])
-        if len(filter) == 1:
-            return [value[0] for value in result]
+        result = execute_query_and_get(self.db, query, labels, [username])
+        if len(result) == 1:
+            return result[0]
 
         return result
 
     def get_by_username_id(self, username: str, uid: int, filter: list[UserFields] = []):
+        labels = ALL if not filter else filter
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s AND username_id = %s;"""
 
-        result = execute_query_and_get(self.db, query, [username, uid])
-        if len(filter) == 1:
-            return [value[0] for value in result]
+        result = execute_query_and_get(self.db, query, labels, [username, uid])
+        if len(result) == 1:
+            return result[0]
+
+        return result
+
+    def get_by_token(self, token: str, filter: list[UserFields] = []):
+        labels = ALL if not filter else filter
+        what = "*" if not filter else ", ".join(field for field in filter)
+        query = f"""SELECT {what} FROM {NAME} WHERE token = %s"""
+
+        #TODO: Get via token should only be valid if token has not expired
+        result = execute_query_and_get(self.db, query, labels, [token])
+        if len(result) == 1:
+            return result[0]
 
         return result
 
