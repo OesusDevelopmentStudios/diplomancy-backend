@@ -116,14 +116,16 @@ class UserTable:
 
         return True
 
-    def set_token_and_expiry(self, email:str, token: str, date: str, save_login: bool) -> bool:
+    def update_by_email(self, email: str, data: dict):
+        what = (" = %s, ".join(key for key in data.keys())) + " = %s"
+        values = list(data.values()) + [email]
         query = f"""
             UPDATE {NAME}
-            SET token = %s, valid_since = %s, save_login = %s
+            SET {what}
             WHERE email = %s;
         """
 
-        if not execute_query(self.db,  query, [token, date, save_login, email]):
+        if not execute_query(self.db, query, values):
             log("Update failed", Severity.ERR)
             return False
 

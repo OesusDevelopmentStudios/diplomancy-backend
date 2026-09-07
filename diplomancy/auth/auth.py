@@ -1,5 +1,4 @@
-import datetime
-
+from datetime import datetime
 from types import NoneType
 
 from utils.http import Response
@@ -99,7 +98,12 @@ def handle_login(
         return AuthResponse(Response.UNAUTHORIZED)
 
     token = get_unique_token(user_db)
-    if not user_db.set_token_and_expiry(email, token, str(datetime.datetime.now()), remember):
+    success = user_db.update_by_email(email, {
+        UserFields.TOKEN: token,
+        UserFields.VALID_SINCE: str(datetime.now()),
+        UserFields.SAVE_LOGIN: remember})
+    if not success:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.OK, token=token)
+    return AuthResponse(Response.UNAUTHORIZED)
+    # return AuthResponse(Response.OK, token=token)
