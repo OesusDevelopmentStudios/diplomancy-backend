@@ -105,5 +105,4 @@ def handle_login(
     if not success:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.UNAUTHORIZED)
-    # return AuthResponse(Response.OK, token=token)
+    return AuthResponse(Response.OK, token=token)

@@ -6,6 +6,7 @@ import hmac
 from uuid import uuid4
 
 from utils.database.users import UserTable, UserFields
+from utils.database.helpers import is_token_valid
 
 
 def _get_data_by_username(user_db: UserTable, uuid: str):
@@ -68,5 +69,5 @@ def get_user_data(user_db: UserTable, user_id: str):
 def get_unique_token(user_db) -> str:
     while True:
         token = uuid4()
-        if not user_db.get_by_token(str(token)):
+        if not is_token_valid(user_db, str(token)):
             return str(token)

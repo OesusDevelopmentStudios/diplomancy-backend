@@ -95,7 +95,6 @@ class UserTable:
         what = "*" if not filter else ", ".join(field for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE token = %s"""
 
-        #TODO: Get via token should only be valid if token has not expired
         result = execute_query_and_get(self.db, query, labels, [token])
         if len(result) == 1:
             return result[0]
