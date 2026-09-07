@@ -54,7 +54,12 @@ def auth_validate():
     json = request.get_json()
 
     # TODO: LOG only for development purposes, remove in production
-    log("Received login request: {0}".format(json), Severity.DBG)
+    log("Received validate request: {0}".format(json), Severity.DBG)
+
+    response = jsonify({})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 
 def initilize():

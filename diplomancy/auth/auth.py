@@ -91,6 +91,8 @@ def handle_login(
     if not isinstance(user_data, dict):
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
+    username = user_data[UserFields.USERNAME]
+    uid = user_data[UserFields.USERNAME_ID]
     email = user_data[UserFields.EMAIL]
     salt = user_data[UserFields.SALT]
     secret = user_data[UserFields.SECRET]
@@ -105,4 +107,4 @@ def handle_login(
     if not success:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.OK, token=token)
+    return AuthResponse(Response.OK, token=token, username=get_uuid(username, uid))
