@@ -21,6 +21,7 @@ class Reason:
     BAD_EMAIL = 2
     BAD_USER_ID = 3
     MISSING_REMEMBER_VALUE = 4
+    MISSING_TOKEN_VALUE = 5
 
 
 class AuthResponse:
@@ -108,3 +109,17 @@ def handle_login(
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
     return AuthResponse(Response.OK, token=token, username=get_uuid(username, uid))
+
+
+def handle_validate(user_db: UserTable, token: str|NoneType) -> AuthResponse:
+    if not token:
+        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.MISSING_TOKEN_VALUE])
+
+    data = user_db.get_by_token(token, [UserFields.USERNAME, UserFields.USERNAME_ID])
+    if not isinstance(data, dict):
+        return AuthResponse(Response.UNAUTHORIZED)
+
+    username = data[UserFields.USERNAME]
+    uid = data[UserFields.USERNAME_ID]
+
+    return AuthResponse(Response.OK, username=get_uuid(username, uid))

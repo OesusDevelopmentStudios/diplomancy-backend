@@ -7,7 +7,7 @@ from flask_cors import CORS
 from utils.log import log, Severity
 from utils.database.users import UserTable
 
-from auth.auth import handle_logon, handle_login
+from auth.auth import handle_logon, handle_login, handle_validate
 
 
 app = Flask("diplomancy-backend")
@@ -56,7 +56,9 @@ def auth_validate():
     # TODO: LOG only for development purposes, remove in production
     log("Received validate request: {0}".format(json), Severity.DBG)
 
-    response = jsonify({})
+    result = handle_validate(user_db, json.get('token', None))
+    response = jsonify(result.dict())
+    response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
