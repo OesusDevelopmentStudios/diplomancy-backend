@@ -123,3 +123,7 @@ def handle_validate(user_db: UserTable, token: str|NoneType) -> AuthResponse:
     uid = data[UserFields.USERNAME_ID]
 
     return AuthResponse(Response.OK, username=get_uuid(username, uid))
+
+
+def handle_logout(user_db: UserTable, token: str|NoneType) -> AuthResponse:
+    return AuthResponse(Response.NOT_FOUND)
