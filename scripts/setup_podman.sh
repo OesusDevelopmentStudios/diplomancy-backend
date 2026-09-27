@@ -21,7 +21,7 @@ if ! podman container exists "$CONTAINER_NAME"; then
     fi
 fi
 
-if [ $EXIT_CODE = 0 ] && ! podman ps | grep "$CONTAINER_NAM"E > /dev/null; then
+if [ $EXIT_CODE = 0 ] && ! podman ps | grep "$CONTAINER_NAME" > /dev/null; then
     echo "$PREFIX_DB" Starting database container...;
 
     if ! podman start "$CONTAINER_NAME" > /dev/null; then
