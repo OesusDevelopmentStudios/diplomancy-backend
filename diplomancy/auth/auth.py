@@ -126,4 +126,19 @@ def handle_validate(user_db: UserTable, token: str|NoneType) -> AuthResponse:
 
 
 def handle_logout(user_db: UserTable, token: str|NoneType) -> AuthResponse:
-    return AuthResponse(Response.NOT_FOUND)
+    if not token:
+        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.MISSING_TOKEN_VALUE])
+
+    data = user_db.get_by_token(token, [UserFields.EMAIL])
+    if not data:
+        return AuthResponse(Response.NOT_FOUND)
+
+    email = data[UserFields.EMAIL]
+    success = user_db.update_by_email(email, {
+        UserFields.TOKEN: None,
+        UserFields.VALID_SINCE: None,
+        UserFields.SAVE_LOGIN: False})
+    if not success:
+            return AuthResponse(Response.INTERNAL_SERVER_ERROR)
+
+    return AuthResponse(Response.OK)
