@@ -54,9 +54,6 @@ class UserDb:
             db.rollback()
             self.initilized = False
 
-    def is_initilized(self):
-        return self.initilized
-
     def get_by_email(self, email: str, filter: list[UserFields] = []):
         labels = ALL if not filter else filter
         what = "*" if not filter else ", ".join(field for field in filter)

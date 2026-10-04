@@ -18,10 +18,10 @@ def initilize():
         database = DB()
         database.initilize(sys.argv[1], sys.argv[2], sys.argv[3])
 
-        # if database.status is not DBStatus.OK:
-        #     log("Database failure. Reason: {0}".format(database.status.value), Severity.ERR)
-        #     log("App will now terminate", Severity.ERR)
-        #     return
+        if database.status is not DBStatus.OK:
+            log("Database failure. Reason: {0}".format(database.status.value), Severity.ERR)
+            log("App will now terminate", Severity.ERR)
+            return
 
         app = Flask("diplomancy-backend")
         CORS(app)

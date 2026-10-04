@@ -9,6 +9,7 @@ from database.users import UserDb
 
 class DBStatus(Enum):
     OK = "Ok"
+    USER_DB_FAILED = "User DB Failed to initilize"
     NOT_INITILIZED = "Not initilized"
 
 
@@ -21,4 +22,10 @@ class DB:
         connection_str = \
             "host=localhost port='{0}' dbname='{1}' user='diplomancy' password='{2}'".format(port, name, password)
         self._db = psycopg.connect(connection_str)
+
         self.user = UserDb(self._db)
+        if not self.user.initilized:
+            self.status = DBStatus.USER_DB_FAILED
+            return
+
+        self.status = DBStatus.OK
