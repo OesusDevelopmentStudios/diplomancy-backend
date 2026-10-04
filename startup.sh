@@ -57,7 +57,7 @@ for message in "${MESSAGES[@]}"; do
     echo -e "$PREFIX_SETUP $message"
 done
 
-if [ $EXIT_CODE = 0 ] && ! python3 diplomancy/main.py $DB_PORT $DB_NAME $DB_PASSWORD; then
+if [ $EXIT_CODE = 0 ] && ! python3 src/main.py $DB_PORT $DB_NAME $DB_PASSWORD; then
     echo -e "$PREFIX_SETUP Failed to start primary script."
     EXIT_CODE=1
 fi

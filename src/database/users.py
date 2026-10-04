@@ -1,7 +1,7 @@
 from utils.types import Database
 from utils.log import log, Severity
 
-from utils.database.common import (
+from database.helpers.common import (
     create_table,
     execute_query,
     execute_query_and_get,
@@ -40,7 +40,7 @@ ALL = [UserFields.USERNAME, UserFields.USERNAME_ID, UserFields.EMAIL, UserFields
        UserFields.VALID_SINCE, UserFields.SAVE_LOGIN]
 
 
-class UserTable:
+class UserDb:
     def __init__(self, db: Database):
         self.db = db
 
