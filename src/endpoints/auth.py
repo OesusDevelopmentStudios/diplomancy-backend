@@ -11,13 +11,13 @@ auth_endpoint = Blueprint('auth', __name__, url_prefix='/api/v1/auth')
 
 
 @auth_endpoint.route("/logon", methods=["POST"])
-def auth_logon():
+def logon():
     json = request.get_json()
 
     # TODO: LOG only for development purposes, remove in production
     log("Received logon request: {0}".format(json), Severity.DBG)
 
-    result = handle_logon(database.user, json.get('email', ''), json.get('username', ''), json.get('password', ''))
+    result = handle_logon(database.users, json.get('email', ''), json.get('username', ''), json.get('password', ''))
     response = jsonify(result.dict())
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -26,13 +26,14 @@ def auth_logon():
 
 
 @auth_endpoint.route("/login", methods=["POST"])
-def auth_login():
+def login():
     json = request.get_json()
 
     # TODO: LOG only for development purposes, remove in production
     log("Received login request: {0}".format(json), Severity.DBG)
 
-    result = handle_login(database.user, json.get('id', ''), json.get('password', ''), json.get('remember', None))
+    result = handle_login(
+        database.users, database.sessions, json.get('id', ''), json.get('password', ''), json.get('remember', False))
     response = jsonify(result.dict())
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -47,7 +48,7 @@ def validate():
     # TODO: LOG only for development purposes, remove in production
     log("Received validate request: {0}".format(json), Severity.DBG)
 
-    result = handle_validate(database.user, json.get('token', None))
+    result = handle_validate(database.users, database.sessions, json.get('token', None))
     response = jsonify(result.dict())
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -56,13 +57,13 @@ def validate():
 
 
 @auth_endpoint.route("/logout", methods=["POST"])
-def auth_logout():
+def logout():
     json = request.get_json()
 
     # TODO: LOG only for development purposes, remove in production
     log("Received logout request: {0}".format(json), Severity.DBG)
 
-    result = handle_logout(database.user, json.get('token', None))
+    result = handle_logout(database.sessions, json.get('token', None))
     response = jsonify(result.dict())
     response.status_code = result.code()
     response.headers.add('Access-Control-Allow-Origin', '*')

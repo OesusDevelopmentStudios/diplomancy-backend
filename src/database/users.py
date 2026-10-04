@@ -1,10 +1,12 @@
+from enum import Enum
+
 from utils.types import Database
 from utils.log import log, Severity
 
 from database.helpers.common import (
     create_table,
     execute_query,
-    execute_query_and_get,
+    execute_query_and_get
 )
 
 NAME = "users"
@@ -14,30 +16,22 @@ SPECS = """
     email varchar(254) NOT NULL,
     secret BYTEA NOT NULL,
     salt BYTEA NOT NULL,
-    token varchar(36),
-    valid_since timestamp,
-    save_login BOOLEAN DEFAULT FALSE,
     UNIQUE (username, username_id),
-    UNIQUE (token),
     CHECK (username <> ''),
     CHECK (email <> ''),
     PRIMARY KEY (email)
 """
 
 
-class UserFields:
+class Users(Enum):
     EMAIL = "email"
     SALT = "salt"
-    SAVE_LOGIN = "save_login"
     SECRET = "secret"
-    TOKEN = "token"
     USERNAME = "username"
     USERNAME_ID = "username_id"
-    VALID_SINCE = "valid_since"
 
 
-ALL = [UserFields.USERNAME, UserFields.USERNAME_ID, UserFields.EMAIL, UserFields.SECRET, UserFields.SALT,
-       UserFields.VALID_SINCE, UserFields.SAVE_LOGIN]
+ALL = [Users.USERNAME, Users.USERNAME_ID, Users.EMAIL, Users.SECRET, Users.SALT]
 
 
 class UserDb:
@@ -54,9 +48,9 @@ class UserDb:
             db.rollback()
             self.initilized = False
 
-    def get_by_email(self, email: str, filter: list[UserFields] = []):
+    def get_by_email(self, email: str, filter: list[Users] = []):
         labels = ALL if not filter else filter
-        what = "*" if not filter else ", ".join(field for field in filter)
+        what = "*" if not filter else ", ".join(field.value for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE email = %s;"""
 
         result = execute_query_and_get(self.db, query, labels, [email])
@@ -65,9 +59,9 @@ class UserDb:
 
         return result
 
-    def get_by_username(self, username: str, filter: list[UserFields] = []):
+    def get_by_username(self, username: str, filter: list[Users] = []):
         labels = ALL if not filter else filter
-        what = "*" if not filter else ", ".join(field for field in filter)
+        what = "*" if not filter else ", ".join(field.value for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s;"""
 
         result = execute_query_and_get(self.db, query, labels, [username])
@@ -76,23 +70,12 @@ class UserDb:
 
         return result
 
-    def get_by_username_id(self, username: str, uid: int, filter: list[UserFields] = []):
+    def get_by_username_and_id(self, username: str, uid: int, filter: list[Users] = []):
         labels = ALL if not filter else filter
-        what = "*" if not filter else ", ".join(field for field in filter)
+        what = "*" if not filter else ", ".join(field.value for field in filter)
         query = f"""SELECT {what} FROM {NAME} WHERE username = %s AND username_id = %s;"""
 
         result = execute_query_and_get(self.db, query, labels, [username, uid])
-        if len(result) == 1:
-            return result[0]
-
-        return result
-
-    def get_by_token(self, token: str, filter: list[UserFields] = []):
-        labels = ALL if not filter else filter
-        what = "*" if not filter else ", ".join(field for field in filter)
-        query = f"""SELECT {what} FROM {NAME} WHERE token = %s"""
-
-        result = execute_query_and_get(self.db, query, labels, [token])
         if len(result) == 1:
             return result[0]
 
@@ -108,21 +91,6 @@ class UserDb:
 
         if not execute_query(self.db,  query, [username, uid, email, secret, salt]):
             log("Insertion failed", Severity.ERR)
-            return False
-
-        return True
-
-    def update_by_email(self, email: str, data: dict):
-        what = (" = %s, ".join(key for key in data.keys())) + " = %s"
-        values = list(data.values()) + [email]
-        query = f"""
-            UPDATE {NAME}
-            SET {what}
-            WHERE email = %s;
-        """
-
-        if not execute_query(self.db, query, values):
-            log("Update failed", Severity.ERR)
             return False
 
         return True
