@@ -37,16 +37,7 @@ ALL = [Users.USERNAME, Users.USERNAME_ID, Users.EMAIL, Users.SECRET, Users.SALT]
 class UserDb:
     def __init__(self, db: Database):
         self.db = db
-
-        try:
-            create_table(self.db, NAME, SPECS)
-            self.db.commit()
-            self.initilized = True
-        except Exception as error:
-            log("Failed to initilize database", Severity.ERR)
-            log(str(error))
-            db.rollback()
-            self.initilized = False
+        self.initilized = create_table(self.db, NAME, SPECS)
 
     def get_by_email(self, email: str, filter: list[Users] = []):
         labels = ALL if not filter else filter

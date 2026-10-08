@@ -34,16 +34,7 @@ ALL = [Sessions.TOKEN, Sessions.START, Sessions.STORE_SESSION, Sessions.EMAIL]
 class SessionDb:
     def __init__(self, db: Database):
         self.db = db
-
-        try:
-            create_table(self.db, NAME, SPECS)
-            self.db.commit()
-            self.initilized = True
-        except Exception as error:
-            log("Failed to initilize database", Severity.ERR)
-            log(str(error))
-            db.rollback()
-            self.initilized = False
+        self.initilized = create_table(self.db, NAME, SPECS)
 
     def get_by_token(self, token: str, filter: list[Sessions] = []):
         labels = ALL if not filter else filter

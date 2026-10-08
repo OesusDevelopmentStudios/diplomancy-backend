@@ -14,10 +14,21 @@ def _adapt_values(labels: list[str], values: any) -> list:
     return data
 
 
-
-def create_table(db: Database, name: str, params: str):
+def create_table(db: Database, name: str, params: str) -> bool:
     creation_str = "CREATE TABLE IF NOT EXISTS %s (%s)" % (name, params)
-    db.execute(creation_str)
+
+    try:
+        db.execute(creation_str)
+        db.commit()
+    except Exception as error:
+        db.rollback()
+
+        log("Failed to initilize database %s" % (name), Severity.ERR)
+        log(str(error))
+
+        return False
+
+    return True
 
 
 def execute_query(db: Database, query, params: list) -> bool:
