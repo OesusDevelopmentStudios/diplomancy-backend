@@ -20,7 +20,7 @@ SPECS = """
     PRIMARY KEY (token)
 """
 
-
+# TODO: ID WITH UUID instead of email, do not make email uniqe (Support of more thank one loggged in session (Future goal))
 class Sessions(Enum):
     TOKEN = "token"
     START = "start"

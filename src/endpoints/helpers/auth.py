@@ -4,6 +4,8 @@ import hashlib
 import hmac
 
 from datetime import datetime
+from random import choice
+from string import ascii_letters
 from types import NoneType
 from uuid import uuid4
 
@@ -15,14 +17,14 @@ from endpoints.helpers.common.utils import get_session_if_valid
 
 
 def _get_sorted_ids(user_db: UserDb, username: str):
-    result = user_db.get_by_username(username, [Users.USERNAME_ID])
+    result = user_db.get_by_username(username, [Users.NAME_ID])
     if not result:
         return []
 
     if isinstance(result, dict):
-        return [result[Users.USERNAME_ID]]
+        return [result[Users.NAME_ID]]
 
-    return sorted([id[Users.USERNAME_ID] for id in result])
+    return sorted([id[Users.NAME_ID] for id in result])
 
 
 def _validate_password(password: str) -> bool:
@@ -39,7 +41,7 @@ def _verify_password(salt: bytes, secret: str, password: str) -> bool:
     return hmac.compare_digest(secret, hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 1000000))
 
 
-def _get_next_uid(user_db: UserDb, username: str) -> int:
+def _get_next_name_id(user_db: UserDb, username: str) -> int:
     new_id = 0
     ids = _get_sorted_ids(user_db, username)
     for taken_id in ids:
@@ -51,22 +53,22 @@ def _get_next_uid(user_db: UserDb, username: str) -> int:
     return new_id
 
 
-def _get_uuid(username: str, uid: int) -> str:
-    zeros = 4 - len(str(uid))
-    return username + "#" + zeros * "0" + str(uid)
+def _get_name_with_id(username: str, name_id: int) -> str:
+    zeros = 4 - len(str(name_id))
+    return username + "#" + zeros * "0" + str(name_id)
 
 
 def _get_user_data(user_db: UserDb, user_id: str):
     if "#" in user_id:
-        username, uid = user_id.split("#")
-        if len(uid) != 4 or not uid.isdigit():
+        username, name_id = user_id.split("#")
+        if len(name_id) != 4 or not name_id.isdigit():
             return None
 
-        return user_db.get_by_username_and_id(username, int(uid), [
-            Users.USERNAME, Users.USERNAME_ID, Users.EMAIL, Users.SALT, Users.SECRET])
+        return user_db.get_by_username_with_id(username, int(name_id), [
+            Users.USERNAME, Users.NAME_ID, Users.EMAIL, Users.SALT, Users.SECRET])
     else:
         return user_db.get_by_email(user_id, [
-            Users.USERNAME, Users.USERNAME_ID, Users.EMAIL, Users.SALT, Users.SECRET])
+            Users.USERNAME, Users.NAME_ID, Users.EMAIL, Users.SALT, Users.SECRET])
 
 
 def _get_unique_token(session_db: SessionDb) -> str:
@@ -74,6 +76,13 @@ def _get_unique_token(session_db: SessionDb) -> str:
         token = uuid4()
         if not get_session_if_valid(session_db, token=str(token)):
             return str(token)
+
+
+def _get_uuid(user_db: UserDb) -> str:
+    while True:
+        uuid = ''.join(choice(ascii_letters) for _ in range(10))
+        if not user_db.get_by_uuid(uuid):
+            return uuid
 
 
 class Reason:
@@ -126,13 +135,14 @@ def handle_logon(user_db: UserDb, email: str|NoneType, username: str|NoneType, p
     if user_db.get_by_email(email):
         return AuthResponse(Response.CONFLICT)
 
-    uid = _get_next_uid(user_db, username)
+    name_id = _get_next_name_id(user_db, username)
     salt, secret = _hash_password(password)
-    success = user_db.insert(username, uid, email, secret, salt)
+    uuid = _get_uuid(user_db)
+    success = user_db.insert(email, name_id, salt, secret, username, uuid)
     if not success:
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.CREATED, username=_get_uuid(username, uid))
+    return AuthResponse(Response.CREATED, username=_get_name_with_id(username, name_id))
 
 
 def handle_login(user_db: UserDb, session_db: SessionDb, user_id: str|NoneType, password: str|NoneType,
@@ -151,7 +161,7 @@ def handle_login(user_db: UserDb, session_db: SessionDb, user_id: str|NoneType, 
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
     username = user[Users.USERNAME]
-    uid = user[Users.USERNAME_ID]
+    name_id = user[Users.NAME_ID]
     email = user[Users.EMAIL]
     salt = user[Users.SALT]
     secret = user[Users.SECRET]
@@ -166,7 +176,7 @@ def handle_login(user_db: UserDb, session_db: SessionDb, user_id: str|NoneType, 
     if not session_db.insert(token, str(datetime.now()), store_session, email):
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.OK, token=token, username=_get_uuid(username, uid))
+    return AuthResponse(Response.OK, token=token, username=_get_name_with_id(username, name_id))
 
 
 def handle_validate(user_db: UserDb, session_db: SessionDb, token: str|NoneType) -> AuthResponse:
@@ -177,15 +187,15 @@ def handle_validate(user_db: UserDb, session_db: SessionDb, token: str|NoneType)
     if not isinstance(session, dict):
         return AuthResponse(Response.UNAUTHORIZED)
 
-    user = user_db.get_by_email(session[Sessions.EMAIL], [Users.USERNAME, Users.USERNAME_ID])
+    user = user_db.get_by_email(session[Sessions.EMAIL], [Users.USERNAME, Users.NAME_ID])
     if not isinstance(user, dict):
         session_db.remove(token)
         return AuthResponse(Response.NOT_FOUND)
 
     username = user[Users.USERNAME]
-    uid = user[Users.USERNAME_ID]
+    name_id = user[Users.NAME_ID]
 
-    return AuthResponse(Response.OK, username=_get_uuid(username, uid))
+    return AuthResponse(Response.OK, username=_get_name_with_id(username, name_id))
 
 
 def handle_logout(session_db: SessionDb, token: str|NoneType) -> AuthResponse:
