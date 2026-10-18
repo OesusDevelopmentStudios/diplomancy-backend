@@ -3,7 +3,7 @@ from datetime import datetime
 from database.sessions import SessionDb, Sessions
 
 
-def _get_session_by_token_or_email(session_db: SessionDb, token: str|None = None, uuid: str|None = None):
+def _get_session_by_token_or_uuid(session_db: SessionDb, token: str|None = None, uuid: str|None = None):
     if token:
         return session_db.get_by_token(token)
 
@@ -14,7 +14,7 @@ def _get_session_by_token_or_email(session_db: SessionDb, token: str|None = None
 
 
 def get_session_if_valid(session_db: SessionDb, token: str|None = None, uuid: str|None = None):
-    data = _get_session_by_token_or_email(session_db, token, uuid)
+    data = _get_session_by_token_or_uuid(session_db, token, uuid)
     if not isinstance(data, dict):
         return None
 
