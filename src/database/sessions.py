@@ -15,20 +15,19 @@ SPECS = """
     token varchar(36) NOT NULL,
     start timestamp NOT NULL,
     store_session BOOLEAN DEFAULT FALSE,
-    email varchar(254) NOT NULL,
-    UNIQUE (email),
+    uuid varchar(10) NOT NULL,
+    UNIQUE (uuid),
     PRIMARY KEY (token)
 """
 
-# TODO: ID WITH UUID instead of email, do not make email uniqe (Support of more thank one loggged in session (Future goal))
 class Sessions(Enum):
     TOKEN = "token"
     START = "start"
     STORE_SESSION = "store_session"
-    EMAIL = "email"
+    UUID = "uuid"
 
 
-ALL = [Sessions.TOKEN, Sessions.START, Sessions.STORE_SESSION, Sessions.EMAIL]
+ALL = [Sessions.TOKEN, Sessions.START, Sessions.STORE_SESSION, Sessions.UUID]
 
 
 class SessionDb:
@@ -47,26 +46,26 @@ class SessionDb:
 
         return result
 
-    def get_by_email(self, email: str, filter: list[Sessions] = []):
+    def get_by_uuid(self, uuid: str, filter: list[Sessions] = []):
         labels = ALL if not filter else filter
         what = "*" if not filter else ", ".join(field.value for field in filter)
-        query = f"""SELECT {what} FROM {NAME} WHERE email = %s;"""
+        query = f"""SELECT {what} FROM {NAME} WHERE uuid = %s;"""
 
-        result = execute_query_and_get(self.db, query, labels, [email])
+        result = execute_query_and_get(self.db, query, labels, [uuid])
         if len(result) == 1:
             return result[0]
 
         return result
 
-    def insert(self, token: str, start: str, store_session: bool, email: str) -> bool:
+    def insert(self, token: str, start: str, store_session: bool, uuid: str) -> bool:
         query = f"""
             INSERT INTO {NAME}
-                (token, start, store_session, email)
+                (token, start, store_session, uuid)
             VALUES
                 (%s, %s, %s, %s)
         """
 
-        if not execute_query(self.db, query, [token, start, store_session, email]):
+        if not execute_query(self.db, query, [token, start, store_session, uuid]):
             log("Insertion failed", Severity.ERR)
             return False
 

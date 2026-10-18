@@ -3,18 +3,18 @@ from datetime import datetime
 from database.sessions import SessionDb, Sessions
 
 
-def _get_session_by_token_or_email(session_db: SessionDb, token: str|None = None, email: str|None = None):
+def _get_session_by_token_or_email(session_db: SessionDb, token: str|None = None, uuid: str|None = None):
     if token:
         return session_db.get_by_token(token)
 
-    if email:
-        return session_db.get_by_email(email)
+    if uuid:
+        return session_db.get_by_uuid(uuid)
 
     return None
 
 
-def get_session_if_valid(session_db: SessionDb, token: str|None = None, email: str|None = None):
-    data = _get_session_by_token_or_email(session_db, token, email)
+def get_session_if_valid(session_db: SessionDb, token: str|None = None, uuid: str|None = None):
+    data = _get_session_by_token_or_email(session_db, token, uuid)
     if not isinstance(data, dict):
         return None
 

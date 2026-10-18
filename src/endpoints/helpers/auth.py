@@ -64,11 +64,9 @@ def _get_user_data(user_db: UserDb, user_id: str):
         if len(name_id) != 4 or not name_id.isdigit():
             return None
 
-        return user_db.get_by_username_with_id(username, int(name_id), [
-            Users.USERNAME, Users.NAME_ID, Users.EMAIL, Users.SALT, Users.SECRET])
+        return user_db.get_by_username_with_id(username, int(name_id), [Users.UUID, Users.SALT, Users.SECRET])
     else:
-        return user_db.get_by_email(user_id, [
-            Users.USERNAME, Users.NAME_ID, Users.EMAIL, Users.SALT, Users.SECRET])
+        return user_db.get_by_email(user_id, [Users.UUID, Users.SALT, Users.SECRET])
 
 
 def _get_unique_token(session_db: SessionDb) -> str:
@@ -90,16 +88,17 @@ class Reason:
     BAD_USERNAME = 1
     BAD_EMAIL = 2
     BAD_USER_ID = 3
-    MISSING_TOKEN_VALUE = 4
+    MISSING_TOKEN = 4
 
 
 class AuthResponse:
     def __init__(self, response: Response, username: str|NoneType = None, detail: list[Reason]|NoneType = None,
-                 token: str|NoneType = None):
+                 token: str|NoneType = None, uuid: str|NoneType = None):
         self.response = response
         self.username = username
         self.detail = detail
         self.token = token
+        self.uuid = uuid
 
     def code(self):
         return self.response.value
@@ -114,6 +113,9 @@ class AuthResponse:
 
         if self.token:
             dict["token"] = self.token
+
+        if self.uuid:
+            dict["uuid"] = self.uuid
 
         return dict
 
@@ -148,10 +150,10 @@ def handle_logon(user_db: UserDb, email: str|NoneType, username: str|NoneType, p
 def handle_login(user_db: UserDb, session_db: SessionDb, user_id: str|NoneType, password: str|NoneType,
                  store_session: bool) -> AuthResponse:
     if not user_id or not password:
-        reason = []
-        if not user_id: reason.append(Reason.BAD_USER_ID)
-        if not password: reason.append(Reason.BAD_PASSWORD)
-        return AuthResponse(Response.BAD_REQUEST, detail=reason)
+        detail = []
+        if not user_id: detail.append(Reason.BAD_USER_ID)
+        if not password: detail.append(Reason.BAD_PASSWORD)
+        return AuthResponse(Response.BAD_REQUEST, detail=detail)
 
     user = _get_user_data(user_db, user_id)
     if not user:
@@ -160,34 +162,32 @@ def handle_login(user_db: UserDb, session_db: SessionDb, user_id: str|NoneType, 
     if not isinstance(user, dict):
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    username = user[Users.USERNAME]
-    name_id = user[Users.NAME_ID]
-    email = user[Users.EMAIL]
+    uuid = user[Users.UUID]
     salt = user[Users.SALT]
     secret = user[Users.SECRET]
     if not _verify_password(salt, secret, password):
         return AuthResponse(Response.UNAUTHORIZED)
 
-    session = get_session_if_valid(session_db, email=email)
+    session = get_session_if_valid(session_db, uuid=uuid)
     if isinstance(session, dict):
         session_db.remove(session[Sessions.TOKEN])
 
     token = _get_unique_token(session_db)
-    if not session_db.insert(token, str(datetime.now()), store_session, email):
+    if not session_db.insert(token, str(datetime.now()), store_session, uuid):
         return AuthResponse(Response.INTERNAL_SERVER_ERROR)
 
-    return AuthResponse(Response.OK, token=token, username=_get_name_with_id(username, name_id))
+    return AuthResponse(Response.OK, token=token, uuid=uuid)
 
 
 def handle_validate(user_db: UserDb, session_db: SessionDb, token: str|NoneType) -> AuthResponse:
     if not token:
-        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.MISSING_TOKEN_VALUE])
+        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.MISSING_TOKEN])
 
     session = get_session_if_valid(session_db, token=token)
     if not isinstance(session, dict):
         return AuthResponse(Response.UNAUTHORIZED)
 
-    user = user_db.get_by_email(session[Sessions.EMAIL], [Users.USERNAME, Users.NAME_ID])
+    user = user_db.get_by_uuid(session[Sessions.UUID], [Users.USERNAME, Users.NAME_ID])
     if not isinstance(user, dict):
         session_db.remove(token)
         return AuthResponse(Response.NOT_FOUND)
@@ -195,12 +195,12 @@ def handle_validate(user_db: UserDb, session_db: SessionDb, token: str|NoneType)
     username = user[Users.USERNAME]
     name_id = user[Users.NAME_ID]
 
-    return AuthResponse(Response.OK, username=_get_name_with_id(username, name_id))
+    return AuthResponse(Response.OK, uuid=session[Sessions.UUID], username=_get_name_with_id(username, name_id))
 
 
 def handle_logout(session_db: SessionDb, token: str|NoneType) -> AuthResponse:
     if not token:
-        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.MISSING_TOKEN_VALUE])
+        return AuthResponse(Response.BAD_REQUEST, detail=[Reason.MISSING_TOKEN])
 
     session = get_session_if_valid(session_db, token=token)
     if not isinstance(session, dict):

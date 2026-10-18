@@ -31,7 +31,7 @@ class Users(Enum):
     SALT = "salt"
     SECRET = "secret"
     USERNAME = "username"
-    UUID = "UUID"
+    UUID = "uuid"
 
 
 ALL = [Users.EMAIL, Users.NAME_ID, Users.SALT, Users.SECRET, Users.USERNAME, Users.UUID]
